@@ -87,6 +87,12 @@ export function BankStatement() {
       return journalEntries.find((e: JournalEntry) => e.id === movement.journalEntryId);
     }
     
+    if (!mainAccount || !uncategorizedAccount) {
+      console.error('Missing system accounts:', { mainAccount, uncategorizedAccount });
+      alert('Error: No se han configurado las cuentas de sistema (Principal/Sin categorizar)');
+      return undefined;
+    }
+
     const isIncome = movement.amount > 0;
     const absAmount = Math.abs(movement.amount);
 
@@ -117,6 +123,7 @@ export function BankStatement() {
     setReconcilingMovement(movement);
     
     const entry = getOrCreateEntry(movement);
+    if (!entry) return;
 
     setReconEntry({
       description: entry.description,
@@ -127,6 +134,11 @@ export function BankStatement() {
 
   const handleSaveReconciliation = () => {
     if (!reconEntry || !reconcilingMovement) return;
+
+    if (reconEntry.lines.some(l => !l.accountId)) {
+      alert('Todas las líneas deben tener una cuenta seleccionada');
+      return;
+    }
 
     const totalDebit = reconEntry.lines.reduce((sum, l) => sum + l.debit, 0);
     const totalCredit = reconEntry.lines.reduce((sum, l) => sum + l.credit, 0);
@@ -153,6 +165,8 @@ export function BankStatement() {
     }
     
     const entry = getOrCreateEntry(identifyingMovement);
+    if (!entry) return;
+
     const newLines = entry.lines.map((l: JournalLine) => {
       if (l.accountId === uncategorizedAccount?.id) {
         return { ...l, accountId: selectedEntityId };
@@ -173,6 +187,11 @@ export function BankStatement() {
   const handleReserve = () => {
     if (!reservingMovement || reservations.length === 0) return;
     
+    if (!mainAccount) {
+      alert('No se ha encontrado la cuenta principal');
+      return;
+    }
+
     const totalReserved = reservations.reduce((sum, r) => sum + r.amount, 0);
     if (totalReserved > reservingMovement.amount) {
       alert('La cantidad total reservada no puede superar el importe del movimiento');
@@ -185,6 +204,8 @@ export function BankStatement() {
     }
 
     const entry = getOrCreateEntry(reservingMovement);
+    if (!entry) return;
+
     const newLines = [...entry.lines];
 
     reservations.forEach(res => {
@@ -197,7 +218,7 @@ export function BankStatement() {
       });
       newLines.push({
         id: crypto.randomUUID(),
-        accountId: mainAccount?.id || '',
+        accountId: mainAccount.id,
         debit: 0,
         credit: res.amount
       });
@@ -214,9 +235,16 @@ export function BankStatement() {
       return;
     }
     
+    if (!mainAccount) {
+      alert('No se ha encontrado la cuenta principal');
+      return;
+    }
+
     const entry = getOrCreateEntry(payingFromSpaceMovement);
+    if (!entry) return;
+
     const newLines = entry.lines.map((l: JournalLine) => {
-      if (l.accountId === mainAccount?.id) {
+      if (l.accountId === mainAccount.id) {
         return { ...l, accountId: selectedSpaceId };
       }
       return l;
