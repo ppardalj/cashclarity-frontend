@@ -8,7 +8,7 @@ import {
   Edit2,
   AlertCircle
 } from 'lucide-react';
-import { Account, AccountType, JournalEntry } from '../types';
+import { Account, AccountType, JournalEntry, JournalLine } from '../types';
 
 export function ChartOfAccounts() {
   const { accounts, addAccount, deleteAccount, journalEntries } = useFinanceStore();
@@ -21,7 +21,7 @@ export function ChartOfAccounts() {
     accounts.forEach((a: Account) => stats[a.id] = { debit: 0, credit: 0 });
 
     journalEntries.forEach((entry: JournalEntry) => {
-      entry.lines.forEach(line => {
+      entry.lines.forEach((line: JournalLine) => {
         if (stats[line.accountId]) {
           stats[line.accountId].debit += line.debit;
           stats[line.accountId].credit += line.credit;

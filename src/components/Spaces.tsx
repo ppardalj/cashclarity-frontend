@@ -12,7 +12,7 @@ import {
 import { Account, JournalEntry, JournalLine } from '../types';
 
 interface SpacesProps {
-  bucketBalances: any;
+  bucketBalances: Record<string, number>;
 }
 
 export function Spaces({ bucketBalances }: SpacesProps) {
@@ -28,7 +28,12 @@ export function Spaces({ bucketBalances }: SpacesProps) {
 
   const bucketTransactions = useMemo(() => {
     if (!selectedBucket) return [];
-    const lines: any[] = [];
+    const lines: (JournalLine & { 
+      entryId: string; 
+      date: string; 
+      description: string; 
+      displayAmount: number; 
+    })[] = [];
     journalEntries.forEach((entry: JournalEntry) => {
       entry.lines.forEach((line: JournalLine) => {
         if (line.accountId === selectedBucket.id) {
@@ -221,7 +226,7 @@ export function Spaces({ bucketBalances }: SpacesProps) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/30">
-                    {bucketTransactions.map((tx: any) => (
+                    {bucketTransactions.map((tx) => (
                       <tr key={`${tx.entryId}-${tx.id}`} className="hover:bg-surface-elevated/10 transition-colors">
                         <td className="p-3 text-xs font-mono text-text-secondary">{tx.date}</td>
                         <td className="p-3 text-xs font-medium">{tx.description || 'Sin descripción'}</td>

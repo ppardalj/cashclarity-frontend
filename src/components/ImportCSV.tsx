@@ -2,13 +2,15 @@ import React, { useState, ChangeEvent } from 'react';
 import { Upload, X, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useFinanceStore } from '../store/useFinanceStore';
 
+import { BankMovement } from '../types';
+
 interface ImportCSVProps {
   onClose: () => void;
 }
 
 export function ImportCSV({ onClose }: ImportCSVProps) {
   const { addBankMovement } = useFinanceStore();
-  const [importPreview, setImportPreview] = useState<{ date: string; description: string; amount: number }[]>([]);
+  const [importPreview, setImportPreview] = useState<Omit<BankMovement, 'id' | 'isIdentified'>[]>([]);
 
   const formatCurrency = (val: number) => 
     new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(val);

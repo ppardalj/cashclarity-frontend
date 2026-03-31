@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { 
   PiggyBank, 
@@ -6,8 +6,15 @@ import {
   ShieldCheck
 } from 'lucide-react';
 
+import { Account } from '../types';
+
 interface DashboardProps {
-  metrics: any;
+  metrics: {
+    realBankBalance: number;
+    totalCommitted: number;
+    availableCash: number;
+    bucketBalances: Record<string, number>;
+  };
 }
 
 export function Dashboard({ metrics }: DashboardProps) {
@@ -15,8 +22,8 @@ export function Dashboard({ metrics }: DashboardProps) {
   const { realBankBalance, totalCommitted, availableCash, bucketBalances } = metrics;
   
   const displayAccounts = useMemo(() => {
-    return accounts.filter((a: any) => a.type === 'main' || a.type === 'space')
-      .sort((a: any, b: any) => {
+    return accounts.filter((a: Account) => a.type === 'main' || a.type === 'space')
+      .sort((a: Account, b: Account) => {
         if (a.type === 'main') return -1;
         if (b.type === 'main') return 1;
         return a.code.localeCompare(b.code);
@@ -26,7 +33,13 @@ export function Dashboard({ metrics }: DashboardProps) {
   const formatCurrency = (val: number) => 
     new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(val);
 
-  const StatCard = ({ title, value, icon: Icon, type = 'neutral', subtext = '' }: any) => {
+  const StatCard = ({ title, value, icon: Icon, type = 'neutral', subtext = '' }: { 
+    title: string; 
+    value: number | string; 
+    icon: React.ElementType; 
+    type?: 'positive' | 'negative' | 'warning' | 'neutral'; 
+    subtext?: string; 
+  }) => {
     const colorClass = 
       type === 'positive' ? 'text-primary-green' : 
       type === 'negative' ? 'text-error' : 
@@ -100,7 +113,7 @@ export function Dashboard({ metrics }: DashboardProps) {
                   </tr>
                 </thead>
                 <tbody className="text-xs font-mono">
-                  {displayAccounts.map((b: any) => {
+                  {displayAccounts.map((b: Account) => {
                     const balance = bucketBalances[b.id] || 0;
                     
                     return (

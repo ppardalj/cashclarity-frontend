@@ -50,7 +50,7 @@ export function BankStatement() {
   const [editingEntry, setEditingEntry] = useState<{
     description: string;
     date: string;
-    lines: { accountId: string; debit: number; credit: number; id: string }[];
+    lines: JournalLine[];
   } | null>(null);
 
   const formatCurrency = (val: number) => 
@@ -96,18 +96,18 @@ export function BankStatement() {
       description: movement.description,
       date: movement.date,
       lines: [
-        { 
+        new JournalLine({ 
           id: crypto.randomUUID(),
           accountId: mainAccount.id,
           debit: isIncome ? absAmount : 0, 
           credit: isIncome ? 0 : absAmount 
-        },
-        { 
+        }),
+        new JournalLine({ 
           id: crypto.randomUUID(),
           accountId: uncategorizedAccount.id,
           debit: isIncome ? 0 : absAmount, 
           credit: isIncome ? absAmount : 0 
-        }
+        })
       ]
     });
 
@@ -131,7 +131,7 @@ export function BankStatement() {
   const handleSaveEntry = async (updatedEntry: {
     description: string;
     date: string;
-    lines: { accountId: string; debit: number; credit: number; id: string }[];
+    lines: JournalLine[];
   }) => {
     if (!editingMovement) return;
 
@@ -324,7 +324,6 @@ export function BankStatement() {
                         <button 
                           onClick={() => {
                             setReservingMovement(m);
-                            setReservations([]);
                           }}
                           className="p-1.5 text-text-secondary hover:text-primary-orange transition-all"
                           title="Reservar Fondos"

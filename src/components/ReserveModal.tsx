@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { useFinanceStore } from '../store/useFinanceStore';
-import { Account, BankMovement } from '../types';
+import { Account, BankMovement, JournalEntry, JournalLine } from '../types';
 
 interface ReserveModalProps {
   movement: BankMovement;
   onClose: () => void;
-  getOrCreateEntry: (movement: BankMovement) => Promise<any>;
+  getOrCreateEntry: (movement: BankMovement) => Promise<JournalEntry | undefined>;
   formatCurrency: (val: number) => string;
 }
 
@@ -43,18 +43,18 @@ export function ReserveModal({ movement, onClose, getOrCreateEntry, formatCurren
 
     reservations.forEach(res => {
       // Debit Space, Credit Main
-      newLines.push({
+      newLines.push(new JournalLine({
         id: crypto.randomUUID(),
         accountId: res.spaceId,
         debit: res.amount,
         credit: 0
-      });
-      newLines.push({
+      }));
+      newLines.push(new JournalLine({
         id: crypto.randomUUID(),
         accountId: mainAccount.id,
         debit: 0,
         credit: res.amount
-      });
+      }));
     });
 
     await updateJournalEntry(entry.id, { lines: newLines });

@@ -57,7 +57,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
   updateAccount: async (id, updates) => {
     await api.accounts.update(id, updates);
     set((state) => ({
-      accounts: state.accounts.map((a) => (a.id === id ? { ...a, ...updates } : a)),
+      accounts: state.accounts.map((a) => (a.id === id ? new Account({ ...a, ...updates }) : a)),
     }));
   },
 
@@ -75,7 +75,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
   updateJournalEntry: async (id, updates) => {
     await api.journalEntries.update(id, updates);
     set((state) => ({
-      journalEntries: state.journalEntries.map((e) => (e.id === id ? { ...e, ...updates } : e)),
+      journalEntries: state.journalEntries.map((e) => (e.id === id ? new JournalEntry({ ...e, ...updates }) : e)),
     }));
   },
 
@@ -90,17 +90,17 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     const entry = get().journalEntries.find(e => e.id === entryId);
     if (!entry) return;
     
-    const newLines = entry.lines.map(l => l.id === lineId ? { ...l, ...updates } : l);
+    const newLines = entry.lines.map(l => l.id === lineId ? new JournalLine({ ...l, ...updates }) : l);
     
     await api.journalEntries.update(entryId, { lines: newLines });
 
     set((state) => ({
       journalEntries: state.journalEntries.map((entry) => {
         if (entry.id !== entryId) return entry;
-        return {
+        return new JournalEntry({
           ...entry,
-          lines: entry.lines.map((line) => (line.id === lineId ? { ...line, ...updates } : line)),
-        };
+          lines: entry.lines.map((line) => (line.id === lineId ? new JournalLine({ ...line, ...updates }) : line)),
+        });
       }),
     }));
   },
@@ -114,7 +114,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
   updateBankMovement: async (id, updates) => {
     await api.bankMovements.update(id, updates);
     set((state) => ({
-      bankMovements: state.bankMovements.map((m) => (m.id === id ? { ...m, ...updates } : m)),
+      bankMovements: state.bankMovements.map((m) => (m.id === id ? new BankMovement({ ...m, ...updates }) : m)),
     }));
   },
 

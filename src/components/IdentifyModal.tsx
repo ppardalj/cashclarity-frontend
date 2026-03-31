@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { useFinanceStore } from '../store/useFinanceStore';
-import { Account, BankMovement, JournalLine } from '../types';
+import { Account, BankMovement, JournalLine, JournalEntry } from '../types';
 
 interface IdentifyModalProps {
   movement: BankMovement;
   onClose: () => void;
-  getOrCreateEntry: (movement: BankMovement) => Promise<any>;
+  getOrCreateEntry: (movement: BankMovement) => Promise<JournalEntry | undefined>;
 }
 
 export function IdentifyModal({ movement, onClose, getOrCreateEntry }: IdentifyModalProps) {

@@ -14,7 +14,7 @@ export function Journal() {
     new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(val);
 
   const flattenedLines = useMemo(() => {
-    const lines: any[] = [];
+    const lines: (JournalLine & { entryId: string; date: string; description: string })[] = [];
     journalEntries.forEach((entry: JournalEntry) => {
       entry.lines.forEach((line: JournalLine) => {
         lines.push({
@@ -71,7 +71,7 @@ export function Journal() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border/30">
-            {flattenedLines.map((line: any, idx: number) => {
+            {flattenedLines.map((line, idx: number) => {
               const account = accounts.find((a: Account) => a.id === line.accountId);
 
               return (

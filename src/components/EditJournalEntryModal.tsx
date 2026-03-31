@@ -1,25 +1,25 @@
 import React from 'react';
 import { X, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { Account, BankMovement } from '../types';
+import { Account, BankMovement, JournalLine } from '../types';
 
 interface EditJournalEntryModalProps {
   movement: BankMovement;
   entry: {
     description: string;
     date: string;
-    lines: { accountId: string; debit: number; credit: number; id: string }[];
+    lines: JournalLine[];
   };
   accounts: Account[];
   onClose: () => void;
   onSave: (updatedEntry: {
     description: string;
     date: string;
-    lines: { accountId: string; debit: number; credit: number; id: string }[];
+    lines: JournalLine[];
   }) => void;
   setEntry: React.Dispatch<React.SetStateAction<{
     description: string;
     date: string;
-    lines: { accountId: string; debit: number; credit: number; id: string }[];
+    lines: JournalLine[];
   } | null>>;
   formatCurrency: (val: number) => string;
 }
@@ -163,7 +163,7 @@ export function EditJournalEntryModal({
                         onClick={() => {
                           setEntry({
                             ...entry,
-                            lines: [...entry.lines, { id: crypto.randomUUID(), accountId: accounts[0]?.id || '', debit: 0, credit: 0 }]
+                            lines: [...entry.lines, new JournalLine({ id: crypto.randomUUID(), accountId: accounts[0]?.id || '', debit: 0, credit: 0 })]
                           });
                         }}
                         className="text-[9px] font-bold uppercase tracking-widest text-primary-orange hover:underline"
