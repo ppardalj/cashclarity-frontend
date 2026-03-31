@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { Account, JournalEntry, BankMovement, JournalLine } from '../types';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:54321/functions/v1/server';
+import { api } from '../api';
 
 interface FinanceStore {
   accounts: Account[];
@@ -37,20 +36,10 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
   fetchData: async () => {
     set({ isLoading: true, error: null });
     try {
-      const [accRes, journalRes, bankRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/accounts`),
-        fetch(`${API_BASE_URL}/journal-entries`),
-        fetch(`${API_BASE_URL}/bank-movements`),
-      ]);
-
-      if (!accRes.ok || !journalRes.ok || !bankRes.ok) {
-        throw new Error('Error al cargar datos de la API');
-      }
-
       const [accounts, journalEntries, bankMovements] = await Promise.all([
-        accRes.json(),
-        journalRes.json(),
-        bankRes.json(),
+        api.accounts.getAll(),
+        api.journalEntries.getAll(),
+        api.bankMovements.getAll(),
       ]);
 
       set({ accounts, journalEntries, bankMovements, isLoading: false });
@@ -60,62 +49,38 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
   },
 
   addAccount: async (account) => {
-    const res = await fetch(`${API_BASE_URL}/accounts`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(account),
-    });
-    if (!res.ok) throw new Error('Error al crear cuenta');
-    const newAccount = await res.json();
+    const newAccount = await api.accounts.create(account);
     set((state) => ({ accounts: [...state.accounts, newAccount] }));
     return newAccount;
   },
 
   updateAccount: async (id, updates) => {
-    const res = await fetch(`${API_BASE_URL}/accounts/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates),
-    });
-    if (!res.ok) throw new Error('Error al actualizar cuenta');
+    await api.accounts.update(id, updates);
     set((state) => ({
       accounts: state.accounts.map((a) => (a.id === id ? { ...a, ...updates } : a)),
     }));
   },
 
   deleteAccount: async (id) => {
-    const res = await fetch(`${API_BASE_URL}/accounts/${id}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Error al eliminar cuenta');
+    await api.accounts.delete(id);
     set((state) => ({ accounts: state.accounts.filter((a) => a.id !== id) }));
   },
 
   addJournalEntry: async (entry) => {
-    const res = await fetch(`${API_BASE_URL}/journal-entries`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(entry),
-    });
-    if (!res.ok) throw new Error('Error al crear asiento');
-    const newEntry = await res.json();
+    const newEntry = await api.journalEntries.create(entry);
     set((state) => ({ journalEntries: [newEntry, ...state.journalEntries] }));
     return newEntry;
   },
 
   updateJournalEntry: async (id, updates) => {
-    const res = await fetch(`${API_BASE_URL}/journal-entries/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates),
-    });
-    if (!res.ok) throw new Error('Error al actualizar asiento');
+    await api.journalEntries.update(id, updates);
     set((state) => ({
       journalEntries: state.journalEntries.map((e) => (e.id === id ? { ...e, ...updates } : e)),
     }));
   },
 
   deleteJournalEntry: async (id) => {
-    const res = await fetch(`${API_BASE_URL}/journal-entries/${id}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Error al eliminar asiento');
+    await api.journalEntries.delete(id);
     set((state) => ({
       journalEntries: state.journalEntries.filter((e) => e.id !== id),
     }));
@@ -127,12 +92,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     
     const newLines = entry.lines.map(l => l.id === lineId ? { ...l, ...updates } : l);
     
-    const res = await fetch(`${API_BASE_URL}/journal-entries/${entryId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lines: newLines }),
-    });
-    if (!res.ok) throw new Error('Error al actualizar línea de asiento');
+    await api.journalEntries.update(entryId, { lines: newLines });
 
     set((state) => ({
       journalEntries: state.journalEntries.map((entry) => {
@@ -146,32 +106,20 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
   },
 
   addBankMovement: async (movement) => {
-    const res = await fetch(`${API_BASE_URL}/bank-movements`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(movement),
-    });
-    if (!res.ok) throw new Error('Error al crear movimiento');
-    const newMovement = await res.json();
+    const newMovement = await api.bankMovements.create(movement);
     set((state) => ({ bankMovements: [newMovement, ...state.bankMovements] }));
     return newMovement;
   },
 
   updateBankMovement: async (id, updates) => {
-    const res = await fetch(`${API_BASE_URL}/bank-movements/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates),
-    });
-    if (!res.ok) throw new Error('Error al actualizar movimiento');
+    await api.bankMovements.update(id, updates);
     set((state) => ({
       bankMovements: state.bankMovements.map((m) => (m.id === id ? { ...m, ...updates } : m)),
     }));
   },
 
   deleteBankMovement: async (id) => {
-    const res = await fetch(`${API_BASE_URL}/bank-movements/${id}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Error al eliminar movimiento');
+    await api.bankMovements.delete(id);
     set((state) => ({
       bankMovements: state.bankMovements.filter((m) => m.id !== id),
     }));
