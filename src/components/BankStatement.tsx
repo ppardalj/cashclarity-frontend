@@ -34,6 +34,11 @@ export function BankStatement() {
   } = useFinanceStore();
 
   const [isAdding, setIsAdding] = useState(false);
+  const [newMovement, setNewMovement] = useState({
+    date: new Date().toISOString().split('T')[0],
+    description: '',
+    amount: ''
+  });
   const [isImporting, setIsImporting] = useState(false);
   const [reconcilingMovement, setReconcilingMovement] = useState<BankMovement | null>(null);
   const [identifyingMovement, setIdentifyingMovement] = useState<BankMovement | null>(null);
