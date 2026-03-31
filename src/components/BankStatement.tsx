@@ -96,13 +96,13 @@ export function BankStatement() {
       lines: [
         { 
           id: crypto.randomUUID(),
-          accountId: mainAccount?.id || '', 
+          accountId: mainAccount.id,
           debit: isIncome ? absAmount : 0, 
           credit: isIncome ? 0 : absAmount 
         },
         { 
           id: crypto.randomUUID(),
-          accountId: uncategorizedAccount?.id || '', 
+          accountId: uncategorizedAccount.id,
           debit: isIncome ? 0 : absAmount, 
           credit: isIncome ? absAmount : 0 
         }
