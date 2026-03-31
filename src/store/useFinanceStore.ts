@@ -25,10 +25,6 @@ interface FinanceStore {
   addBankMovement: (movement: Omit<BankMovement, 'id' | 'isIdentified'>) => BankMovement;
   updateBankMovement: (id: string, updates: Partial<BankMovement>) => void;
   deleteBankMovement: (id: string) => void;
-
-  // Compatibility helpers
-  getBuckets: () => Account[];
-  getEntities: () => Account[];
 }
 
 export const useFinanceStore = create<FinanceStore>()(
@@ -109,68 +105,9 @@ export const useFinanceStore = create<FinanceStore>()(
           bankMovements: state.bankMovements.filter((m) => m.id !== id),
         }));
       },
-
-      getBuckets: () => {
-        return get().accounts.filter((a) => a.type === 'space' || a.type === 'main');
-      },
-
-      getEntities: () => {
-        return get().accounts.filter((a) => a.type === 'entity');
-      },
     }),
     {
-      name: 'cashclarity_storage',
-      // Migration from old localStorage keys if they exist
-      onRehydrateStorage: (state) => {
-        return (rehydratedState, error) => {
-          if (error) {
-            console.error('Error rehydrating storage:', error);
-            return;
-          }
-          
-          // If the new storage is empty, try to migrate from old keys
-          if (rehydratedState && rehydratedState.accounts.length === INITIAL_ACCOUNTS.length && rehydratedState.journalEntries.length === 0) {
-            const oldAccounts = localStorage.getItem('treasury_accounts');
-            const oldJournal = localStorage.getItem('treasury_journal');
-            const oldBank = localStorage.getItem('treasury_bank_movements');
-
-            if (oldAccounts || oldJournal || oldBank) {
-              const accounts = oldAccounts ? JSON.parse(oldAccounts) : INITIAL_ACCOUNTS;
-              const journalEntries = oldJournal ? JSON.parse(oldJournal) : [];
-              const bankMovements = oldBank ? JSON.parse(oldBank) : [];
-
-              // Ensure system accounts exist
-              const hasMain = accounts.some((a: Account) => a.type === 'main');
-              const hasUncategorized = accounts.some((a: Account) => a.id === 'acc-uncategorized');
-              if (!hasMain || !hasUncategorized) {
-                const missing = INITIAL_ACCOUNTS.filter(ia => !accounts.some((la: Account) => la.id === ia.id));
-                accounts.push(...missing);
-              }
-
-              // Migration: Ensure all lines have IDs
-              const migratedJournal = journalEntries.map((entry: any) => ({
-                ...entry,
-                lines: (entry.lines || []).map((line: any) => ({
-                  ...line,
-                  id: line.id || crypto.randomUUID()
-                }))
-              }));
-
-              // Migration: Ensure isIdentified exists
-              const migratedBank = bankMovements.map((m: any) => ({
-                ...m,
-                isIdentified: m.isIdentified ?? m.isConciliated ?? false
-              }));
-
-              useFinanceStore.setState({
-                accounts,
-                journalEntries: migratedJournal,
-                bankMovements: migratedBank
-              });
-            }
-          }
-        };
-      },
+      name: 'cashclarity_storage'
     }
   )
 );

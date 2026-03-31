@@ -42,7 +42,7 @@ export function Journal() {
             <History className="w-4 h-4 text-text-secondary" />
             Libro Diario // Registro Contable
           </h2>
-          <p className="text-xs text-text-secondary">Source of truth: Asientos y apuntes contables</p>
+          <p className="text-xs text-text-secondary">Asientos y apuntes contables</p>
         </div>
       </div>
 

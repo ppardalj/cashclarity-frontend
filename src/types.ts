@@ -23,33 +23,6 @@ export interface JournalEntry {
   lines: JournalLine[];
 }
 
-export interface Bucket {
-  id: string;
-  name: string;
-  description?: string;
-  isDefaultOperational: boolean;
-  active: boolean;
-}
-
-export interface Entity {
-  id: string;
-  name: string;
-  aliases?: string[];
-  notes?: string;
-}
-
-export interface BankTransaction {
-  id: string;
-  date: string;
-  description: string;
-  amount: number; // Positive for income, negative for expense
-  entityId?: string;
-  incomeAllocations: IncomeAllocation[];
-  expenseBucketId?: string; // For expenses, only one bucket
-  reviewStatus: 'pending' | 'reviewed';
-  notes?: string;
-}
-
 export interface BankMovement {
   id: string;
   date: string;
@@ -58,9 +31,4 @@ export interface BankMovement {
   isIdentified: boolean;
   entityId?: string;
   journalEntryId?: string;
-}
-
-export interface IncomeAllocation {
-  bucketId: string;
-  amount: number;
 }

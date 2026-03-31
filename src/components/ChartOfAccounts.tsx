@@ -11,7 +11,7 @@ import {
 import { Account, AccountType, JournalEntry } from '../types';
 
 export function ChartOfAccounts() {
-  const { accounts, addAccount, updateAccount, deleteAccount, journalEntries } = useFinanceStore();
+  const { accounts, addAccount, deleteAccount, journalEntries } = useFinanceStore();
   const [isAdding, setIsAdding] = useState(false);
   const [newAccount, setNewAccount] = useState({ code: '', name: '', type: 'space' as AccountType });
   const [searchTerm, setSearchTerm] = useState('');
