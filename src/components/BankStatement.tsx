@@ -1,6 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { ImportCSV } from './ImportCSV';
+import { IdentifyModal } from './IdentifyModal';
+import { ReserveModal } from './ReserveModal';
+import { PayFromSpaceModal } from './PayFromSpaceModal';
 import { 
   Plus, 
   Upload, 
@@ -36,17 +39,6 @@ export function BankStatement() {
   const [identifyingMovement, setIdentifyingMovement] = useState<BankMovement | null>(null);
   const [reservingMovement, setReservingMovement] = useState<BankMovement | null>(null);
   const [payingFromSpaceMovement, setPayingFromSpaceMovement] = useState<BankMovement | null>(null);
-
-  const [newMovement, setNewMovement] = useState({
-    date: new Date().toISOString().split('T')[0],
-    description: '',
-    amount: ''
-  });
-
-  // Modal States
-  const [selectedEntityId, setSelectedEntityId] = useState('');
-  const [selectedSpaceId, setSelectedSpaceId] = useState('');
-  const [reservations, setReservations] = useState<{ spaceId: string, amount: number }[]>([]);
 
   // Reconciliation State
   const [reconEntry, setReconEntry] = useState<{
@@ -156,103 +148,6 @@ export function BankStatement() {
 
     setReconcilingMovement(null);
     setReconEntry(null);
-  };
-
-  const handleIdentify = async () => {
-    if (!identifyingMovement || !selectedEntityId) {
-      alert('Por favor, selecciona una entidad');
-      return;
-    }
-    
-    const entry = await getOrCreateEntry(identifyingMovement);
-    if (!entry) return;
-
-    const newLines = entry.lines.map((l: JournalLine) => {
-      if (l.accountId === uncategorizedAccount?.id) {
-        return { ...l, accountId: selectedEntityId };
-      }
-      return l;
-    });
-
-    await updateJournalEntry(entry.id, { lines: newLines });
-    await updateBankMovement(identifyingMovement.id, { 
-      isIdentified: true, 
-      entityId: selectedEntityId 
-    });
-
-    setIdentifyingMovement(null);
-    setSelectedEntityId('');
-  };
-
-  const handleReserve = async () => {
-    if (!reservingMovement || reservations.length === 0) return;
-    
-    if (!mainAccount) {
-      alert('No se ha encontrado la cuenta principal');
-      return;
-    }
-
-    const totalReserved = reservations.reduce((sum, r) => sum + r.amount, 0);
-    if (totalReserved > reservingMovement.amount) {
-      alert('La cantidad total reservada no puede superar el importe del movimiento');
-      return;
-    }
-
-    if (reservations.some(r => !r.spaceId || r.amount <= 0)) {
-      alert('Todas las reservas deben tener un espacio seleccionado y una cantidad mayor que cero');
-      return;
-    }
-
-    const entry = await getOrCreateEntry(reservingMovement);
-    if (!entry) return;
-
-    const newLines = [...entry.lines];
-
-    reservations.forEach(res => {
-      // Debit Space, Credit Main
-      newLines.push({
-        id: crypto.randomUUID(),
-        accountId: res.spaceId,
-        debit: res.amount,
-        credit: 0
-      });
-      newLines.push({
-        id: crypto.randomUUID(),
-        accountId: mainAccount.id,
-        debit: 0,
-        credit: res.amount
-      });
-    });
-
-    await updateJournalEntry(entry.id, { lines: newLines });
-    setReservingMovement(null);
-    setReservations([]);
-  };
-
-  const handlePayFromSpace = async () => {
-    if (!payingFromSpaceMovement || !selectedSpaceId) {
-      alert('Por favor, selecciona un espacio');
-      return;
-    }
-    
-    if (!mainAccount) {
-      alert('No se ha encontrado la cuenta principal');
-      return;
-    }
-
-    const entry = await getOrCreateEntry(payingFromSpaceMovement);
-    if (!entry) return;
-
-    const newLines = entry.lines.map((l: JournalLine) => {
-      if (l.accountId === mainAccount.id) {
-        return { ...l, accountId: selectedSpaceId };
-      }
-      return l;
-    });
-
-    await updateJournalEntry(entry.id, { lines: newLines });
-    setPayingFromSpaceMovement(null);
-    setSelectedSpaceId('');
   };
 
   const handleImportCSV = () => {
@@ -480,136 +375,30 @@ export function BankStatement() {
 
       {/* Identify Modal */}
       {identifyingMovement && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-surface border border-border w-full max-w-md rounded-sm shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-border flex items-center justify-between bg-surface-elevated/20">
-              <h3 className="text-sm font-bold uppercase tracking-widest">Identificar Entidad</h3>
-              <button onClick={() => setIdentifyingMovement(null)} className="text-text-secondary hover:text-text-primary">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-8 flex flex-col gap-6">
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-mono uppercase tracking-wider text-text-secondary">Seleccionar Contraparte</label>
-                <select 
-                  value={selectedEntityId}
-                  onChange={e => setSelectedEntityId(e.target.value)}
-                  className="w-full bg-background border border-border p-2 text-sm rounded-sm focus:ring-1 focus:ring-primary-green outline-none"
-                >
-                  <option value="">Seleccionar entidad...</option>
-                  {entities.map((e: Account) => (
-                    <option key={e.id} value={e.id}>{e.code} - {e.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex justify-end gap-3">
-                <button onClick={() => setIdentifyingMovement(null)} className="px-6 py-2 text-xs font-bold uppercase tracking-widest text-text-secondary">Cancelar</button>
-                <button onClick={handleIdentify} className="bg-primary-green text-background px-6 py-2 text-xs font-bold uppercase tracking-widest rounded-sm">Identificar</button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <IdentifyModal 
+          movement={identifyingMovement} 
+          onClose={() => setIdentifyingMovement(null)} 
+          getOrCreateEntry={getOrCreateEntry} 
+        />
       )}
 
       {/* Reserve Modal */}
       {reservingMovement && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-surface border border-border w-full max-w-lg rounded-sm shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-border flex items-center justify-between bg-surface-elevated/20">
-              <h3 className="text-sm font-bold uppercase tracking-widest">Reservar Fondos</h3>
-              <button onClick={() => setReservingMovement(null)} className="text-text-secondary hover:text-text-primary">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-8 flex flex-col gap-6">
-              <div className="bg-background border border-border p-3 rounded-sm flex justify-between items-center">
-                <span className="text-xs text-text-secondary uppercase font-mono">Disponible para reservar</span>
-                <span className="text-sm font-bold text-primary-green">{formatCurrency(reservingMovement.amount)}</span>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                {reservations.map((res, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    <select 
-                      value={res.spaceId}
-                      onChange={e => {
-                        const newRes = [...reservations];
-                        newRes[idx].spaceId = e.target.value;
-                        setReservations(newRes);
-                      }}
-                      className="flex-1 bg-background border border-border p-2 text-xs rounded-sm outline-none"
-                    >
-                      <option value="">Seleccionar espacio...</option>
-                      {spaces.map((s: Account) => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
-                      ))}
-                    </select>
-                    <input 
-                      type="number" 
-                      value={res.amount}
-                      onChange={e => {
-                        const newRes = [...reservations];
-                        newRes[idx].amount = parseFloat(e.target.value) || 0;
-                        setReservations(newRes);
-                      }}
-                      className="w-24 bg-background border border-border p-2 text-xs rounded-sm outline-none font-mono"
-                    />
-                    <button 
-                      onClick={() => setReservations(reservations.filter((_, i) => i !== idx))}
-                      className="text-text-secondary hover:text-primary-orange"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-                <button 
-                  onClick={() => setReservations([...reservations, { spaceId: '', amount: 0 }])}
-                  className="text-[10px] font-bold uppercase tracking-widest text-primary-orange hover:underline self-start"
-                >
-                  + Añadir Reserva
-                </button>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                <button onClick={() => setReservingMovement(null)} className="px-6 py-2 text-xs font-bold uppercase tracking-widest text-text-secondary">Cancelar</button>
-                <button onClick={handleReserve} className="bg-primary-green text-background px-6 py-2 text-xs font-bold uppercase tracking-widest rounded-sm">Guardar Reservas</button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ReserveModal 
+          movement={reservingMovement} 
+          onClose={() => setReservingMovement(null)} 
+          getOrCreateEntry={getOrCreateEntry} 
+          formatCurrency={formatCurrency}
+        />
       )}
 
       {/* Pay from Space Modal */}
       {payingFromSpaceMovement && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-surface border border-border w-full max-w-md rounded-sm shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-border flex items-center justify-between bg-surface-elevated/20">
-              <h3 className="text-sm font-bold uppercase tracking-widest">Pagar desde Espacio</h3>
-              <button onClick={() => setPayingFromSpaceMovement(null)} className="text-text-secondary hover:text-text-primary">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-8 flex flex-col gap-6">
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-mono uppercase tracking-wider text-text-secondary">Seleccionar Espacio de Origen</label>
-                <select 
-                  value={selectedSpaceId}
-                  onChange={e => setSelectedSpaceId(e.target.value)}
-                  className="w-full bg-background border border-border p-2 text-sm rounded-sm focus:ring-1 focus:ring-primary-green outline-none"
-                >
-                  <option value="">Seleccionar espacio...</option>
-                  {spaces.map((s: Account) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex justify-end gap-3">
-                <button onClick={() => setPayingFromSpaceMovement(null)} className="px-6 py-2 text-xs font-bold uppercase tracking-widest text-text-secondary">Cancelar</button>
-                <button onClick={handlePayFromSpace} className="bg-primary-green text-background px-6 py-2 text-xs font-bold uppercase tracking-widest rounded-sm">Confirmar Pago</button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PayFromSpaceModal 
+          movement={payingFromSpaceMovement} 
+          onClose={() => setPayingFromSpaceMovement(null)} 
+          getOrCreateEntry={getOrCreateEntry} 
+        />
       )}
 
       {/* Reconciliation Modal */}
