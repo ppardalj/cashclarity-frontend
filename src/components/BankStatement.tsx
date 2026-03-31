@@ -82,7 +82,7 @@ export function BankStatement() {
     });
   };
 
-  const getOrCreateEntry = (movement: BankMovement) => {
+  const getOrCreateEntry = async (movement: BankMovement) => {
     if (movement.journalEntryId) {
       return journalEntries.find((e: JournalEntry) => e.id === movement.journalEntryId);
     }
@@ -96,7 +96,7 @@ export function BankStatement() {
     const isIncome = movement.amount > 0;
     const absAmount = Math.abs(movement.amount);
 
-    const entry = addJournalEntry({
+    const entry = await addJournalEntry({
       description: movement.description,
       date: movement.date,
       lines: [
@@ -115,14 +115,14 @@ export function BankStatement() {
       ]
     });
 
-    updateBankMovement(movement.id, { journalEntryId: entry.id });
+    await updateBankMovement(movement.id, { journalEntryId: entry.id });
     return entry;
   };
 
-  const startReconciliation = (movement: BankMovement) => {
+  const startReconciliation = async (movement: BankMovement) => {
     setReconcilingMovement(movement);
     
-    const entry = getOrCreateEntry(movement);
+    const entry = await getOrCreateEntry(movement);
     if (!entry) return;
 
     setReconEntry({
@@ -132,7 +132,7 @@ export function BankStatement() {
     });
   };
 
-  const handleSaveReconciliation = () => {
+  const handleSaveReconciliation = async () => {
     if (!reconEntry || !reconcilingMovement) return;
 
     if (reconEntry.lines.some(l => !l.accountId)) {
@@ -148,7 +148,7 @@ export function BankStatement() {
       return;
     }
 
-    updateJournalEntry(reconcilingMovement.journalEntryId!, {
+    await updateJournalEntry(reconcilingMovement.journalEntryId!, {
       date: reconEntry.date,
       description: reconEntry.description,
       lines: reconEntry.lines
@@ -158,13 +158,13 @@ export function BankStatement() {
     setReconEntry(null);
   };
 
-  const handleIdentify = () => {
+  const handleIdentify = async () => {
     if (!identifyingMovement || !selectedEntityId) {
       alert('Por favor, selecciona una entidad');
       return;
     }
     
-    const entry = getOrCreateEntry(identifyingMovement);
+    const entry = await getOrCreateEntry(identifyingMovement);
     if (!entry) return;
 
     const newLines = entry.lines.map((l: JournalLine) => {
@@ -174,8 +174,8 @@ export function BankStatement() {
       return l;
     });
 
-    updateJournalEntry(entry.id, { lines: newLines });
-    updateBankMovement(identifyingMovement.id, { 
+    await updateJournalEntry(entry.id, { lines: newLines });
+    await updateBankMovement(identifyingMovement.id, { 
       isIdentified: true, 
       entityId: selectedEntityId 
     });
@@ -184,7 +184,7 @@ export function BankStatement() {
     setSelectedEntityId('');
   };
 
-  const handleReserve = () => {
+  const handleReserve = async () => {
     if (!reservingMovement || reservations.length === 0) return;
     
     if (!mainAccount) {
@@ -203,7 +203,7 @@ export function BankStatement() {
       return;
     }
 
-    const entry = getOrCreateEntry(reservingMovement);
+    const entry = await getOrCreateEntry(reservingMovement);
     if (!entry) return;
 
     const newLines = [...entry.lines];
@@ -224,12 +224,12 @@ export function BankStatement() {
       });
     });
 
-    updateJournalEntry(entry.id, { lines: newLines });
+    await updateJournalEntry(entry.id, { lines: newLines });
     setReservingMovement(null);
     setReservations([]);
   };
 
-  const handlePayFromSpace = () => {
+  const handlePayFromSpace = async () => {
     if (!payingFromSpaceMovement || !selectedSpaceId) {
       alert('Por favor, selecciona un espacio');
       return;
@@ -240,7 +240,7 @@ export function BankStatement() {
       return;
     }
 
-    const entry = getOrCreateEntry(payingFromSpaceMovement);
+    const entry = await getOrCreateEntry(payingFromSpaceMovement);
     if (!entry) return;
 
     const newLines = entry.lines.map((l: JournalLine) => {
@@ -250,7 +250,7 @@ export function BankStatement() {
       return l;
     });
 
-    updateJournalEntry(entry.id, { lines: newLines });
+    await updateJournalEntry(entry.id, { lines: newLines });
     setPayingFromSpaceMovement(null);
     setSelectedSpaceId('');
   };
