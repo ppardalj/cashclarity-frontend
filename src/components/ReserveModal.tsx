@@ -39,7 +39,7 @@ export function ReserveModal({ movement, onClose, getOrCreateEntry, formatCurren
     const entry = await getOrCreateEntry(movement);
     if (!entry) return;
 
-    const newLines = [...entry.lines];
+    const newLines = entry.lines.map(l => new JournalLine({ ...l }));
 
     reservations.forEach(res => {
       // Debit Space, Credit Main

@@ -32,9 +32,9 @@ export function PayFromSpaceModal({ movement, onClose, getOrCreateEntry }: PayFr
 
     const newLines = entry.lines.map((l: JournalLine) => {
       if (l.accountId === mainAccount.id) {
-        return { ...l, accountId: selectedSpaceId };
+        return new JournalLine({ ...l, accountId: selectedSpaceId });
       }
-      return l;
+      return new JournalLine({ ...l });
     });
 
     await updateJournalEntry(entry.id, { lines: newLines });

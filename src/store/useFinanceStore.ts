@@ -73,9 +73,14 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
   },
 
   updateJournalEntry: async (id, updates) => {
-    await api.journalEntries.update(id, updates);
+    // Ensure that if lines are updated, they are full JournalLine objects
+    const entryUpdates = { ...updates };
+    if (entryUpdates.lines) {
+      entryUpdates.lines = entryUpdates.lines.map(l => l instanceof JournalLine ? l : new JournalLine(l));
+    }
+    await api.journalEntries.update(id, entryUpdates);
     set((state) => ({
-      journalEntries: state.journalEntries.map((e) => (e.id === id ? new JournalEntry({ ...e, ...updates }) : e)),
+      journalEntries: state.journalEntries.map((e) => (e.id === id ? new JournalEntry({ ...e, ...entryUpdates }) : e)),
     }));
   },
 
@@ -90,16 +95,21 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
     const entry = get().journalEntries.find(e => e.id === entryId);
     if (!entry) return;
     
-    const newLines = entry.lines.map(l => l.id === lineId ? new JournalLine({ ...l, ...updates }) : l);
+    const newLines = entry.lines.map(l => {
+      if (l.id === lineId) {
+        return new JournalLine({ ...l, ...updates });
+      }
+      return l;
+    });
     
     await api.journalEntries.update(entryId, { lines: newLines });
 
     set((state) => ({
-      journalEntries: state.journalEntries.map((entry) => {
-        if (entry.id !== entryId) return entry;
+      journalEntries: state.journalEntries.map((e) => {
+        if (e.id !== entryId) return e;
         return new JournalEntry({
-          ...entry,
-          lines: entry.lines.map((line) => (line.id === lineId ? new JournalLine({ ...line, ...updates }) : line)),
+          ...e,
+          lines: newLines,
         });
       }),
     }));

@@ -151,7 +151,7 @@ export function BankStatement() {
     await updateJournalEntry(editingMovement.journalEntryId!, {
       date: updatedEntry.date,
       description: updatedEntry.description,
-      lines: updatedEntry.lines
+      lines: updatedEntry.lines.map(l => new JournalLine(l))
     });
 
     setEditingMovement(null);

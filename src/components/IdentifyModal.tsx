@@ -27,15 +27,15 @@ export function IdentifyModal({ movement, onClose, getOrCreateEntry }: IdentifyM
 
     const newLines = entry.lines.map((l: JournalLine) => {
       if (l.accountId === uncategorizedAccount?.id) {
-        return { ...l, accountId: selectedEntityId };
+        return new JournalLine({ ...l, accountId: selectedEntityId });
       }
-      return l;
+      return new JournalLine({ ...l });
     });
 
     await updateJournalEntry(entry.id, { lines: newLines });
     await updateBankMovement(movement.id, { 
       isIdentified: true, 
-      entityId: selectedEntityId 
+      entityId: selectedEntityId
     });
 
     onClose();
