@@ -62,6 +62,14 @@ export function BankStatement() {
 
   const mainAccount = useMemo(() => accounts.find((a: Account) => a.type === 'main'), [accounts]);
   const uncategorizedAccount = useMemo(() => accounts.find((a: Account) => a.type === 'uncategorized'), [accounts]);
+  
+  const sortedBankMovements = useMemo(() => {
+    return [...bankMovements].sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return dateB - dateA;
+    });
+  }, [bankMovements]);
 
   const handleAddMovement = () => {
     if (!newMovement.description || !newMovement.amount) return;
@@ -276,7 +284,7 @@ export function BankStatement() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border/30">
-            {bankMovements.map((m: BankMovement) => {
+            {sortedBankMovements.map((m: BankMovement) => {
               const entity = accounts.find((a: Account) => a.id === m.entityId);
               
               return (
