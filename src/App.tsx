@@ -92,10 +92,10 @@ export default function App() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando datos...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-orange mx-auto"></div>
+          <p className="mt-4 text-text-secondary font-mono text-xs uppercase tracking-widest">Cargando datos...</p>
         </div>
       </div>
     );
@@ -103,14 +103,14 @@ export default function App() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center p-8 bg-white shadow-lg rounded-lg max-w-md">
-          <div className="text-red-500 text-5xl mb-4">⚠️</div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Error de conexión</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
+      <div className="min-h-screen flex items-center justify-center bg-background p-6">
+        <div className="text-center max-w-md border border-border p-12 bg-surface rounded-sm">
+          <div className="text-primary-orange text-4xl mb-6">⚠️</div>
+          <h2 className="text-xs font-mono uppercase tracking-[0.2em] text-text-secondary mb-4">Error de conexión</h2>
+          <p className="text-sm text-text-primary mb-8 leading-relaxed font-mono">{error}</p>
           <button 
             onClick={() => fetchData()}
-            className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+            className="px-8 py-3 bg-primary-orange text-white text-xs font-bold uppercase tracking-widest hover:bg-primary-orange/90 transition-all rounded-sm"
           >
             Reintentar
           </button>

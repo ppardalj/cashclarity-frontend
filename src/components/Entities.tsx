@@ -258,7 +258,7 @@ export function Entities() {
                   <tbody className="divide-y divide-border/30">
                     {selectedEntityStats.transactions.map((tx) => (
                       <tr key={`${tx.entryId}-${tx.id}`} className="hover:bg-surface-elevated/10 transition-colors">
-                        <td className="p-3 text-xs font-mono text-text-secondary">{tx.date}</td>
+                        <td className="p-3 text-xs font-mono text-text-secondary">{tx.date.split('T')[0]}</td>
                         <td className="p-3 text-xs font-medium">{tx.description || 'Sin descripción'}</td>
                         <td className={`p-3 numeric font-bold text-right ${tx.displayAmount >= 0 ? 'text-primary-green' : 'text-primary-orange'}`}>
                           {formatCurrency(tx.displayAmount)}

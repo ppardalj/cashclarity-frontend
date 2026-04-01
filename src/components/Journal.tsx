@@ -76,7 +76,7 @@ export function Journal() {
 
               return (
                 <tr key={`${line.entryId}-${line.id || idx}`} className="hover:bg-surface-elevated/20 transition-colors group">
-                  <td className="p-4 text-xs font-mono text-text-secondary">{line.date}</td>
+                  <td className="p-4 text-xs font-mono text-text-secondary">{line.date.split('T')[0]}</td>
                   <td className="p-4">
                     <span className="text-xs font-medium">{line.description}</span>
                   </td>

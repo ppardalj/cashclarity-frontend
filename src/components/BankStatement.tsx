@@ -45,6 +45,8 @@ export function BankStatement() {
   const [identifyingMovement, setIdentifyingMovement] = useState<BankMovement | null>(null);
   const [reservingMovement, setReservingMovement] = useState<BankMovement | null>(null);
   const [payingFromSpaceMovement, setPayingFromSpaceMovement] = useState<BankMovement | null>(null);
+  const [editingDescriptionId, setEditingDescriptionId] = useState<string | null>(null);
+  const [tempDescription, setTempDescription] = useState('');
 
   // Journal Entry Editing State
   const [editingEntry, setEditingEntry] = useState<{
@@ -168,6 +170,24 @@ export function BankStatement() {
 
   const handleImportCSV = () => {
     setIsImporting(true);
+  };
+
+  const handleUpdateDescription = async (id: string) => {
+    if (!tempDescription.trim()) {
+      setEditingDescriptionId(null);
+      return;
+    }
+    
+    const movement = bankMovements.find(m => m.id === id);
+    if (!movement) return;
+
+    await updateBankMovement(id, { description: tempDescription });
+
+    if (movement.journalEntryId) {
+      await updateJournalEntry(movement.journalEntryId, { description: tempDescription });
+    }
+
+    setEditingDescriptionId(null);
   };
 
   return (
@@ -302,15 +322,44 @@ export function BankStatement() {
                       )}
                     </button>
                   </td>
-                  <td className="p-4 text-xs font-mono text-text-secondary">{m.date}</td>
+                  <td className="p-4 text-xs font-mono text-text-secondary">{m.date.split('T')[0]}</td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       {m.amount > 0 ? (
-                        <ArrowUpRight className="w-3 h-3 text-primary-green" />
+                        <ArrowUpRight className="w-3 h-3 text-primary-green flex-shrink-0" />
                       ) : (
-                        <ArrowDownLeft className="w-3 h-3 text-primary-orange" />
+                        <ArrowDownLeft className="w-3 h-3 text-primary-orange flex-shrink-0" />
                       )}
-                      <span className="text-xs font-medium">{m.description}</span>
+                      {editingDescriptionId === m.id ? (
+                        <div className="flex items-center gap-1 w-full">
+                          <input 
+                            type="text"
+                            autoFocus
+                            value={tempDescription}
+                            onChange={(e) => setTempDescription(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleUpdateDescription(m.id);
+                              if (e.key === 'Escape') setEditingDescriptionId(null);
+                            }}
+                            onBlur={() => handleUpdateDescription(m.id)}
+                            className="bg-background border border-primary-orange p-1 text-xs rounded-sm outline-none w-full"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 group/desc overflow-hidden">
+                          <span className="text-xs font-medium truncate">{m.description}</span>
+                          <button 
+                            onClick={() => {
+                              setEditingDescriptionId(m.id);
+                              setTempDescription(m.description);
+                            }}
+                            className="p-1 text-text-secondary hover:text-primary-orange opacity-0 group-hover/desc:opacity-100 transition-all flex-shrink-0"
+                            title="Editar descripción"
+                          >
+                            <FileEdit className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td className="p-4">
