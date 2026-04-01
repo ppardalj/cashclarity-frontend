@@ -10,35 +10,38 @@ import { Journal } from './components/Journal';
 import { ChartOfAccounts } from './components/ChartOfAccounts';
 import { Login } from './components/Login';
 import { JournalEntry } from './types';
-
-const HARDCODED_EMAIL = 'pedro.pardal@exeal.com';
-const HARDCODED_PASS = 'prueba';
+import { supabase } from './supabaseClient';
+import { Session } from '@supabase/supabase-js';
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return localStorage.getItem('autonomo_auth') === 'true';
-  });
+  const [session, setSession] = useState<Session | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   const { accounts, journalEntries, fetchData, isLoading, error } = useFinanceStore();
 
   useEffect(() => {
-    if (isAuthenticated) {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setIsAuthLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (session) {
       fetchData();
     }
-  }, [isAuthenticated, fetchData]);
+  }, [session, fetchData]);
 
-  const handleLogin = (email: string, pass: string) => {
-    if (email === HARDCODED_EMAIL && pass === HARDCODED_PASS) {
-      setIsAuthenticated(true);
-      localStorage.setItem('autonomo_auth', 'true');
-    } else {
-      alert('Credenciales incorrectas');
-    }
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('autonomo_auth');
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
   };
 
   // Derived treasury metrics
@@ -72,8 +75,19 @@ export default function App() {
     };
   }, [accounts, journalEntries]);
 
-  if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} />;
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-orange mx-auto"></div>
+          <p className="mt-4 text-text-secondary font-mono text-xs uppercase tracking-widest">Verificando sesión...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <Login />;
   }
 
   if (isLoading) {

@@ -1,22 +1,48 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Lock, Mail, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, AlertCircle, UserPlus, LogIn } from 'lucide-react';
+import { supabase } from '../supabaseClient';
 
-interface LoginProps {
-  onLogin: (email: string, pass: string) => void;
-}
-
-export function Login({ onLogin }: LoginProps) {
+export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError('Por favor, rellena todos los campos');
-      return;
+    setError('');
+    setLoading(true);
+    
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setError(error.message);
     }
-    onLogin(email, password);
+    setLoading(false);
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMsg('');
+    setLoading(true);
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) {
+      setError(error.message);
+    } else {
+      setSuccessMsg('¡Registro con éxito! Por favor verifica tu email.');
+    }
+    setLoading(false);
   };
 
   return (
@@ -32,7 +58,7 @@ export function Login({ onLogin }: LoginProps) {
         </div>
 
         <div className="bg-surface border border-border p-8 rounded-sm shadow-2xl">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          <form onSubmit={isRegistering ? handleRegister : handleLogin} className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-mono uppercase tracking-widest text-text-secondary">Email de Usuario</label>
               <div className="relative">
@@ -43,6 +69,7 @@ export function Login({ onLogin }: LoginProps) {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="usuario@ejemplo.com"
                   className="w-full bg-background border border-border pl-10 pr-4 py-2.5 text-sm rounded-sm focus:ring-1 focus:ring-primary-orange outline-none transition-all"
+                  required
                 />
               </div>
             </div>
@@ -57,6 +84,7 @@ export function Login({ onLogin }: LoginProps) {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="w-full bg-background border border-border pl-10 pr-4 py-2.5 text-sm rounded-sm focus:ring-1 focus:ring-primary-orange outline-none transition-all"
+                  required
                 />
               </div>
             </div>
@@ -68,13 +96,44 @@ export function Login({ onLogin }: LoginProps) {
               </div>
             )}
 
+            {successMsg && (
+              <div className="flex items-center gap-2 text-primary-green bg-primary-green/10 p-3 rounded-sm border border-primary-green/20 animate-in fade-in slide-in-from-top-1">
+                <ShieldCheck className="w-4 h-4 shrink-0" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">{successMsg}</span>
+              </div>
+            )}
+
             <button 
               type="submit"
-              className="mt-2 bg-primary-orange text-background py-3 text-xs font-bold uppercase tracking-[0.2em] rounded-sm hover:bg-primary-orange/90 transition-all shadow-lg active:scale-[0.98]"
+              disabled={loading}
+              className="mt-2 bg-primary-orange text-background py-3 text-xs font-bold uppercase tracking-[0.2em] rounded-sm hover:bg-primary-orange/90 transition-all shadow-lg active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Acceder al Sistema
+              {loading ? (
+                <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
+              ) : isRegistering ? (
+                <>
+                  <UserPlus className="w-4 h-4" /> Registrarse
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-4 h-4" /> Acceder al Sistema
+                </>
+              )}
             </button>
           </form>
+
+          <div className="mt-6 pt-6 border-t border-border flex justify-center">
+            <button 
+              onClick={() => {
+                setIsRegistering(!isRegistering);
+                setError('');
+                setSuccessMsg('');
+              }}
+              className="text-[10px] font-bold uppercase tracking-widest text-text-secondary hover:text-primary-orange transition-colors"
+            >
+              {isRegistering ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
+            </button>
+          </div>
         </div>
 
         <div className="mt-8 text-center">

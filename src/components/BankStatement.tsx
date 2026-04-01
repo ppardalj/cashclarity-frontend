@@ -61,7 +61,7 @@ export function BankStatement() {
   }, [bankMovements]);
 
   const mainAccount = useMemo(() => accounts.find((a: Account) => a.type === 'main'), [accounts]);
-  const uncategorizedAccount = useMemo(() => accounts.find((a: Account) => a.id === 'acc-uncategorized'), [accounts]);
+  const uncategorizedAccount = useMemo(() => accounts.find((a: Account) => a.type === 'uncategorized'), [accounts]);
 
   const handleAddMovement = () => {
     if (!newMovement.description || !newMovement.amount) return;

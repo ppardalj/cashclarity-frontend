@@ -14,7 +14,7 @@ export function IdentifyModal({ movement, onClose, getOrCreateEntry }: IdentifyM
   const [selectedEntityId, setSelectedEntityId] = useState('');
 
   const entities = accounts.filter((a: Account) => a.type === 'entity');
-  const uncategorizedAccount = accounts.find((a: Account) => a.id === 'acc-uncategorized');
+  const uncategorizedAccount = accounts.find((a: Account) => a.type === 'uncategorized');
 
   const handleIdentify = async () => {
     if (!selectedEntityId) {

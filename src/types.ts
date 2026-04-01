@@ -1,4 +1,4 @@
-export type AccountType = 'main' | 'space' | 'entity' | 'other';
+export type AccountType = 'main' | 'space' | 'entity' | 'uncategorized';
 
 export class Account {
   id: string;
