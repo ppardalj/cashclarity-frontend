@@ -1,4 +1,6 @@
-# CashClarity Backend
+# CashClarity Frontend
+
+[![CI](https://github.com/ppardalj/cashclarity-frontend/actions/workflows/deploy.yml/badge.svg)](https://github.com/ppardalj/cashclarity-frontend/actions)
 
 This contains everything you need to run your app locally.
 
