@@ -1,24 +1,21 @@
 import { Account, JournalEntry, BankMovement } from './types';
-import { supabase } from './supabaseClient';
+import { useAuth } from "react-oidc-context";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:54321/';
 
 const getHeaders = async () => {
-  const { data: { session } } = await supabase.auth.getSession();
+  const auth = useAuth();
+
+  const token = auth.user?.access_token;
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-  if (session?.access_token) {
-    headers['Authorization'] = `Bearer ${session.access_token}`;
-  }
+  headers['Authorization'] = `Bearer ${token}`;
   return headers;
 };
 
 const handleResponse = async (res: Response) => {
-  if (res.status === 401) {
-    await supabase.auth.signOut();
-    throw new Error('Sesión expirada. Por favor, inicia sesión de nuevo.');
-  }
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: 'Unknown error' }));
     throw new Error(error.message || `API Error: ${res.status}`);

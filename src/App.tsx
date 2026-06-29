@@ -10,40 +10,22 @@ import { Journal } from './components/Journal';
 import { ChartOfAccounts } from './components/ChartOfAccounts';
 import { Login } from './components/Login';
 import { JournalEntry } from './types';
-import { supabase } from './supabaseClient';
-import { Session } from '@supabase/supabase-js';
+import { useAuth } from "react-oidc-context";
 
 export default function App() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const auth = useAuth();
+
+  if (!auth.isAuthenticated) {
+    auth.signinRedirect();
+    return null;
+  }
 
   const { accounts, journalEntries, fetchData, isLoading, error } = useFinanceStore();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setIsAuthLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (session) {
-      fetchData();
-    }
-  }, [session, fetchData]);
-
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-  };
-
+    await auth.signoutRedirect();
+  }
+  
   // Derived treasury metrics
   const treasuryMetrics = useMemo(() => {
     const accountBalances: Record<string, number> = {};
@@ -74,21 +56,6 @@ export default function App() {
       bucketBalances: accountBalances
     };
   }, [accounts, journalEntries]);
-
-  if (isAuthLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-orange mx-auto"></div>
-          <p className="mt-4 text-text-secondary font-mono text-xs uppercase tracking-widest">Verificando sesión...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return <Login />;
-  }
 
   if (isLoading) {
     return (
