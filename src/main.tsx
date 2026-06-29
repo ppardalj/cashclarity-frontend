@@ -11,6 +11,9 @@ const oidcConfig = {
   post_logout_redirect_uri: "https://cashclarity-frontend.ne2.studio",
   response_type: "code",
   scope: "openid profile email offline_access urn:zitadel:iam:org:domain:primary:cashclarity",
+  onSigninCallback: () => {
+    window.history.replaceState({}, document.title, "/");
+  },
 };
 
 createRoot(document.getElementById('root')!).render(
