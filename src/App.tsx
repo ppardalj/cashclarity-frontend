@@ -15,10 +15,13 @@ import { useAuth } from "react-oidc-context";
 export default function App() {
   const auth = useAuth();
 
-  if (!auth.isAuthenticated) {
-    auth.signinRedirect();
-    return null;
-  }
+  useEffect(() => {
+    const isCallback = window.location.pathname === "/callback";
+
+    if (!auth.isLoading && !auth.isAuthenticated && !isCallback) {
+      auth.signinRedirect();
+    }
+  }, [auth.isLoading, auth.isAuthenticated]);
 
   const { accounts, journalEntries, fetchData, isLoading, error } = useFinanceStore();
 
